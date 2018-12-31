@@ -1,0 +1,5 @@
+create simple GUI with pygame
+modify GUI for server & client
+  server_main
+  client_main
+create lobby, change GUI on connection, show on Server
