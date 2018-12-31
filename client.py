@@ -1,13 +1,30 @@
 import gui
+import socket
+import sys
+import time
 
-def business_procedure(program_state):
-  pass
+def business_procedure(events, program_state):
+  client_socket = program_state['client_socket']
+  client_socket.connect(program_state['connection_details'])
+  print client_socket.recv(1024)
+  client_socket.close()
+  for i in range(3):
+    print "shutting down in ", 3 - i, "seconds.."
+    time.sleep(1)
+  sys.exit()
+
 
 def business_function():
-  return lambda: business_procedure()
+  return lambda events, program_state: business_procedure(events, program_state)
 
 def program_state():
-  return None
+  client_socket = socket.socket()
+  host = 'localhost'
+  port = 12345
+  return {
+    'client_socket': client_socket,
+    'connection_details': (host, port)
+  }
 
 screen_size = (600, 500)
 gui.main(program_state(), business_function(), screen_size)
