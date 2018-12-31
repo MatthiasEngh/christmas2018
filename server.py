@@ -2,16 +2,27 @@ import gui
 import select
 import socket
 
+CONNECTION_MESSAGE = 'Got connection from %s'
+CLIENT_MESSAGE = 'Thank you for connecting'
+SOCKET_TIMEOUT = 0.2
+TERMINAL_PRINT = True
+
 def business_procedure(events, program_state):
-  readable_sockets, _, _ = select.select(program_state['sockets'], [], [], 0.5)
+  gui_messages = {
+    'log': []
+  }
+  readable_sockets, _, _ = select.select(program_state['sockets'], [], [], SOCKET_TIMEOUT)
   for readable_socket in readable_sockets:
     if readable_socket is program_state['server_socket']:
       c, addr = readable_socket.accept()
-      print 'Got connection from', addr
-      c.send('Thank you for connecting')
+      gui_messages['log'].append(CONNECTION_MESSAGE % str(addr))
+      if TERMINAL_PRINT:
+        print CONNECTION_MESSAGE % str(addr)
+      c.send(CLIENT_MESSAGE)
       c.close()
     else:
       pass
+  return gui_messages
 
 def business_function():
   return lambda events, program_state: business_procedure(events, program_state)
