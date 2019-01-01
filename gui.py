@@ -15,13 +15,13 @@ def gui(program_state, business, screen_size):
   pygame.init()
   screen = pygame.display.set_mode(screen_size)
 
-  gui = Gui(program_state, business, screen)
-  gui.main_loop()
+  window = Window(program_state, business, screen)
+  window.open()
   main_loop(program_state, business, screen)
 
 
 
-class Gui:
+class Window:
   def __init__(self, program_state, business, screen):
     self.business = business
     self.header_font = pygame.font.SysFont(FONT_NAME, HEADER_FONTSIZE, HEADER_BOLD)
@@ -41,6 +41,9 @@ class Gui:
 
       self.run_business()
       self.update()
+
+  def open(self):
+    self.main_loop()
 
   def run_business(self):
     self.messages = self.business(program_state=self.program_state)
