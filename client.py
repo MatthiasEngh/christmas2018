@@ -4,7 +4,8 @@ import sys
 import time
 
 
-def business_procedure(events, program_state):
+def business_procedure(**kwargs):
+  program_state = kwargs['program_state']
   client_socket = program_state['client_socket']
   client_socket.connect(program_state['connection_details'])
   print client_socket.recv(1024)

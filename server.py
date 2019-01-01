@@ -9,7 +9,8 @@ SOCKET_TIMEOUT = 0.2
 TERMINAL_PRINT = True
 
 
-def business_procedure(events, program_state):
+def business_procedure(**kwargs):
+  program_state = kwargs['program_state']
   gui_messages = {
     'log': []
   }
@@ -27,7 +28,7 @@ def business_procedure(events, program_state):
   return gui_messages
 
 def business_function():
-  return lambda events, program_state: business_procedure(events, program_state)
+  return lambda **kwargs: business_procedure(**kwargs)
 
 def program_state():
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

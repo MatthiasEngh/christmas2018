@@ -10,7 +10,7 @@ def main_loop(program_state, business):
         pygame.quit()
         sys.exit()
 
-    business(events, program_state)
+    business(program_state=program_state)
 
 
 def gui(program_state, business, screen_size):
