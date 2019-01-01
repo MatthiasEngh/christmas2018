@@ -13,7 +13,7 @@ def main_loop(program_state, business):
     business(events, program_state)
 
 
-def main(program_state, business, screen_size):
+def gui(program_state, business, screen_size):
   pygame.init()
   screen = pygame.display.set_mode(screen_size)
   main_loop(program_state, business)

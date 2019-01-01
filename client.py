@@ -3,6 +3,7 @@ import socket
 import sys
 import time
 
+
 def business_procedure(events, program_state):
   client_socket = program_state['client_socket']
   client_socket.connect(program_state['connection_details'])
@@ -13,18 +14,18 @@ def business_procedure(events, program_state):
     time.sleep(1)
   sys.exit()
 
-
 def business_function():
   return lambda events, program_state: business_procedure(events, program_state)
 
 def program_state():
   client_socket = socket.socket()
-  host = 'localhost'
+  host = socket.gethostname()
   port = 12345
   return {
     'client_socket': client_socket,
     'connection_details': (host, port)
   }
 
+
 screen_size = (600, 500)
-gui.main(program_state(), business_function(), screen_size)
+gui.gui(program_state(), business_function(), screen_size)

@@ -2,10 +2,12 @@ import gui
 import select
 import socket
 
+
 CONNECTION_MESSAGE = 'Got connection from %s'
 CLIENT_MESSAGE = 'Thank you for connecting'
 SOCKET_TIMEOUT = 0.2
 TERMINAL_PRINT = True
+
 
 def business_procedure(events, program_state):
   gui_messages = {
@@ -30,7 +32,7 @@ def business_function():
 def program_state():
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-  host = 'localhost'
+  host = socket.gethostname()
   port = 12345
   print 'hostname: ', host
   print 'port: ', port
@@ -41,6 +43,7 @@ def program_state():
     'server_socket': server_socket
   }
 
+
 screen_size = (500, 600)
 initial_state = program_state()
-gui.main(initial_state, business_function(), screen_size)
+gui.gui(initial_state, business_function(), screen_size)
