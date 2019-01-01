@@ -16,7 +16,7 @@ def business_procedure(**kwargs):
   sys.exit()
 
 def business_function():
-  return lambda events, program_state: business_procedure(events, program_state)
+  return lambda **kwargs: business_procedure(**kwargs)
 
 def program_state():
   client_socket = socket.socket()
