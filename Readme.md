@@ -1,6 +1,7 @@
 ### CURRENT
 
-create connect button for client
+establish udp
+keep connection open & share state
 
 ### TODO
 

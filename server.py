@@ -6,7 +6,7 @@ import time
 import pdb
 
 
-CONNECTION_MESSAGE = '%s: Got connection from %s'
+RECEIVE_MESSAGE = '%s: Got "%s" from %s'
 CLIENT_MESSAGE = 'Thank you for connecting'
 SOCKET_TIMEOUT = 0.2
 TERMINAL_PRINT = True
@@ -17,35 +17,40 @@ def business_procedure(**kwargs):
   gui_messages = {
     'log': []
   }
-  readable_sockets, _, _ = select.select(program_state['sockets'], [], [], SOCKET_TIMEOUT)
-  for readable_socket in readable_sockets:
-    if readable_socket is program_state['server_socket']:
-      c, addr = readable_socket.accept()
-      log_message = CONNECTION_MESSAGE % (time.ctime(), str(addr))
-      gui_messages['log'].append(log_message)
-      print log_message
-      c.send(CLIENT_MESSAGE)
-      c.close()
-    else:
-      pass
+  received_data = receive_data(program_state)
+  if 'message' in received_data:
+    message = RECEIVE_MESSAGE % (received_data['time'], received_data['message'], received_data['from'])
+    gui_messages['log'].append(message)
   return gui_messages
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
 
 def program_state():
-  server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  server_socket.setblocking(0)
   host = socket.gethostname()
   port = 12345
   print 'hostname: ', host
   print 'port: ', port
   server_socket.bind((host, port))
-  server_socket.listen(5)
   return {
     'sockets': [server_socket],
     'server_socket': server_socket
   }
+
+def receive_data(program_state):
+  try:
+    message, address = program_state['server_socket'].recvfrom(1024)
+    timestamp = time.ctime()
+    network_data = {
+      'from': address,
+      'message': message,
+      'time': timestamp
+    }
+  except socket.error:
+    network_data = {}
+  return network_data
 
 
 screen_size = (500, 600)

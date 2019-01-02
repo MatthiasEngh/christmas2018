@@ -4,31 +4,22 @@ import sys
 import time
 
 
-def connect(client_socket, connection_details):
-  client_socket.connect(connection_details)
-  print client_socket.recv(1024)
-  client_socket.close()
-  for i in range(3):
-    print "shutting down in ", 3 - i, "seconds.."
-    time.sleep(1)
-  sys.exit()
-
-
 def business_procedure(**kwargs):
   program_state = kwargs['program_state']
-  if False:
-    connect(program_state['client_socket'], program_state['connection_details'])
+  client_socket = program_state['client_socket']
+  host_address = program_state['host_address']
+  client_socket.sendto("asdf", host_address)
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
 
 def program_state():
-  client_socket = socket.socket()
-  host = socket.gethostname()
+  client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  address = '127.0.0.1'
   port = 12345
   return {
     'client_socket': client_socket,
-    'connection_details': (host, port)
+    'host_address': (address, port)
   }
 
 
