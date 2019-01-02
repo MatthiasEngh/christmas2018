@@ -1,9 +1,12 @@
 import gui
 import select
 import socket
+import time
+
+import pdb
 
 
-CONNECTION_MESSAGE = 'Got connection from %s'
+CONNECTION_MESSAGE = '%s: Got connection from %s'
 CLIENT_MESSAGE = 'Thank you for connecting'
 SOCKET_TIMEOUT = 0.2
 TERMINAL_PRINT = True
@@ -18,9 +21,9 @@ def business_procedure(**kwargs):
   for readable_socket in readable_sockets:
     if readable_socket is program_state['server_socket']:
       c, addr = readable_socket.accept()
-      gui_messages['log'].append(CONNECTION_MESSAGE % str(addr))
-      if TERMINAL_PRINT:
-        print CONNECTION_MESSAGE % str(addr)
+      log_message = CONNECTION_MESSAGE % (time.ctime(), str(addr))
+      gui_messages['log'].append(log_message)
+      print log_message
       c.send(CLIENT_MESSAGE)
       c.close()
     else:
@@ -48,14 +51,31 @@ def program_state():
 screen_size = (500, 600)
 initial_state = program_state()
 
-painter = gui.Painter(screen_size)
+class ServerPainter(gui.Painter):
+  def update(self, messages):
+    if "log" in messages and len(messages["log"]) > 0:
+      message_text = messages["log"][-1]
+      self.elements["message"].update(text = message_text)
+
+painter = ServerPainter(screen_size)
+log_font = "Geogia"
+
 header_element = gui.TextField(
   bold=True,
-  font="Geogia",
+  font=log_font,
   pos=(10,10),
   font_size=18,
   text="Server"
 )
-painter.add_element(header_element)
+painter.add_element("header", header_element)
+
+message_element = gui.TextField(
+  bold=False,
+  font=log_font,
+  pos=(10,50),
+  font_size=14,
+  text=""
+)
+painter.add_element("message", message_element)
 
 gui.gui(initial_state, business_function(), painter)

@@ -5,7 +5,7 @@ BACKGROUND_COLOR = (255,255,255)
 FONT_NAME = "Georgia"
 
 TEXT_ANTIALIAS = True
-TEXT_COLOR = (0,100,0)
+TEXT_COLOR = (0,0,0)
 
 HEADER_BOLD = True
 HEADER_FONTSIZE = 18
@@ -28,34 +28,42 @@ class TextField:
 
   def configure(self):
     self.font = pygame.font.SysFont(self.font, self.font_size, self.bold)
+    self.draw()
+
+  def draw(self):
     self.surf = self.font.render(self.text, TEXT_ANTIALIAS, TEXT_COLOR)
 
+  def update(self, **kwargs):
+    self.text = kwargs['text']
+    self.draw()
 
 class Painter:
   def __init__(self, screen_size):
-    self.elements = []
+    self.elements = {}
     self.fonts = {}
     self.font_details = {}
     self.screen_size = screen_size
 
-  def add_element(self, element):
-    self.elements.append(element)
+  def add_element(self, element_name, element):
+    self.elements[element_name] = element
 
   def configure(self):
     self.screen = pygame.display.set_mode(self.screen_size)
-    for element in self.elements:
+    for element_name, element in self.elements.iteritems():
       element.configure()
 
   def paint(self):
     self.screen.fill(BACKGROUND_COLOR)
-    for element in self.elements:
+    for element_name, element in self.elements.iteritems():
       self.screen.blit(element.surf, element.pos)
+
+  def update(self, messages):
+    pass
 
 
 class Window:
   def __init__(self, program_state, business, painter):
     self.business = business
-    self.messages = {}
     self.program_state = program_state
     self.painter = painter
 
@@ -68,16 +76,17 @@ class Window:
           pygame.quit()
           sys.exit()
 
-      self.run_business()
-      self.update()
+      messages = self.run_business()
+      self.update(messages)
 
   def open(self):
     self.main_loop()
 
   def run_business(self):
-    self.messages = self.business(program_state=self.program_state)
+    return self.business(program_state=self.program_state)
 
-  def update(self):
+  def update(self, messages):
+    self.painter.update(messages)
     self.painter.paint()
     pygame.display.flip()
 
