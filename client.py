@@ -29,4 +29,5 @@ def program_state():
 
 
 screen_size = (600, 500)
-gui.gui(program_state(), business_function(), screen_size)
+painter = gui.Painter(screen_size)
+gui.gui(program_state(), business_function(), painter)

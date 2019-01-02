@@ -47,4 +47,15 @@ def program_state():
 
 screen_size = (500, 600)
 initial_state = program_state()
-gui.gui(initial_state, business_function(), screen_size)
+
+painter = gui.Painter(screen_size)
+header_element = gui.TextField(
+  bold=True,
+  font="Geogia",
+  pos=(10,10),
+  font_size=18,
+  text="Server"
+)
+painter.add_element(header_element)
+
+gui.gui(initial_state, business_function(), painter)
