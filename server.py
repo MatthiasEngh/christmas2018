@@ -74,6 +74,31 @@ header_element = gui.TextField(
 )
 painter.add_element("header", header_element)
 
+element1 = gui.TextField(
+  bold = False,
+  font=log_font,
+  font_size=14,
+  pos=(10, 50),
+  text="elem1"
+)
+element2 = gui.TextField(
+  bold = False,
+  font=log_font,
+  font_size=14,
+  pos=(10, 50),
+  text="elem2"
+)
+connection_list = gui.ListField(
+  bold=False,
+  fields=[
+    element1,
+    element2
+  ],
+  font=log_font,
+  font_size=14,
+  pos=(10, 200)
+)
+
 message_element = gui.TextField(
   bold=False,
   font=log_font,
@@ -82,5 +107,6 @@ message_element = gui.TextField(
   text=""
 )
 painter.add_element("message", message_element)
+painter.add_element("log", connection_list)
 
 gui.gui(initial_state, business_function(), painter)

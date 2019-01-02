@@ -37,6 +37,51 @@ class TextField:
     self.text = kwargs['text']
     self.draw()
 
+class ListField:
+  def __init__(self, **kwargs):
+    self.bold = kwargs['bold']
+    if 'list' in kwargs:
+      self.list = kwargs['list']
+    else:
+      self.list = []
+    self.font = kwargs['font']
+    self.font_size = kwargs['font_size']
+    self.pos = kwargs['pos']
+    if 'fields' in kwargs:
+      self.text_fields = kwargs['fields']
+    else:
+      self.text_fields = []
+
+  def configure(self):
+    self.font = pygame.font.SysFont(self.font, self.font_size, self.bold)
+    for text_field in self.text_fields:
+      text_field.configure()
+    self.draw()
+
+  def element_count(self):
+    return len(self.text_fields)
+
+  def getheight(self):
+    return 500
+
+  def getsize(self):
+    return (self.getwidth(), self.getheight())
+
+  def getwidth(self):
+    return 100
+
+  def draw(self):
+    self.surf = pygame.Surface(self.getsize())
+    self.surf.fill((255,255,255))
+    for i in range(self.element_count()):
+      self.surf.blit(self.text_fields[i].surf, self.element_pos(i))
+
+  def element_pos(self, num):
+    return (20, num * 50)
+
+  def update(self, **kwargs):
+    pass
+
 class Painter:
   def __init__(self, screen_size):
     self.elements = {}
