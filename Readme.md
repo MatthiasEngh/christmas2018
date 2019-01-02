@@ -1,7 +1,6 @@
 ### CURRENT
 
-print log server
-
+create connect button for client
 
 ### TODO
 
