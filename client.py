@@ -3,36 +3,49 @@ import socket
 import sys
 import time
 import json
+import pdb
+
 
 def communicate(client_socket, host_address, send_data):
   try:
     server_message, _server_address = client_socket.recvfrom(1024)
     server_data = json.loads(server_message)
-  except socket.error:
+  except socket.error as e:
+    if e[0] != 35:
+      raise e
     server_data = {}
   client_socket.sendto(send_data, host_address)
   return server_data
+
+def extract_player_pos(server_data):
+  player_data = json.loads(server_data['game_state'])
+  player_id = server_data['player_id']
+  player_data.pop(player_id)
+  return player_data
 
 def business_procedure(**kwargs):
   program_state = kwargs['program_state']
   client_socket = program_state['client_socket']
   host_address = program_state['host_address']
   game_state = program_state['game_state']
-  server_data = communicate(client_socket, host_address, json.dumps(game_state.get_personal()))
-  if 'game_state' in server_data:
-    game_state.accept(server_data['game_state'])
-
+  gui_messages = {}
+  client_data = json.dumps({ 'player_pos': game_state.get_personal() })
+  server_data = communicate(client_socket, host_address, client_data)
+  if server_data:
+    game_state.update_other(extract_player_pos(server_data))
+  return gui_messages
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
 
 class GameState:
   def __init__(self):
-    pass
-  def accept(self, server_state):
-    pass
+    self.pos = (0,0)
+    self.other_players = []
+  def update_other(self, player_pos):
+    self.other_players = player_pos
   def get_personal(self):
-    return {}
+    return self.pos
 
 def program_state():
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
