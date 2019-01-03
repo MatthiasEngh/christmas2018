@@ -13,17 +13,28 @@ TERMINAL_PRINT = True
 
 def business_procedure(**kwargs):
   program_state = kwargs['program_state']
+  shared_state = program_state['shared_state']
+  server_socket = program_state['server_socket']
   gui_messages = {
-    'log': []
   }
-  received_data = receive_data(program_state)
+  received_data = receive_data(server_socket)
   if 'message' in received_data:
     message = RECEIVE_MESSAGE % (received_data['time'], received_data['message'], received_data['from'])
-    gui_messages['log'].append(message)
+    shared_state.add(message)
+    print shared_state.messages
   return gui_messages
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
+
+MESSAGES_LENGTH = 10
+class ServerSharedState:
+  def __init__(self):
+    self.messages = []
+  def add(self, message):
+    if len(self.messages) >= MESSAGES_LENGTH:
+      del(self.messages[0])
+    self.messages.append(message)
 
 def program_state():
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -35,12 +46,13 @@ def program_state():
   server_socket.bind((host, port))
   return {
     'sockets': [server_socket],
-    'server_socket': server_socket
+    'server_socket': server_socket,
+    'shared_state': ServerSharedState()
   }
 
-def receive_data(program_state):
+def receive_data(server_socket):
   try:
-    message, address = program_state['server_socket'].recvfrom(1024)
+    message, address = server_socket.recvfrom(1024)
     timestamp = time.ctime()
     network_data = {
       'from': address,
@@ -71,26 +83,18 @@ header_element = gui.TextField(
 )
 painter.add_element("header", header_element)
 
-element1 = gui.TextField(
-  bold = False,
-  font=log_font,
-  font_size=14,
-  pos=(10, 50),
-  text="elem1"
-)
-element2 = gui.TextField(
-  bold = False,
-  font=log_font,
-  font_size=14,
-  pos=(10, 50),
-  text="elem2"
-)
+fields = {}
+for i in range(MESSAGES_LENGTH):
+  fields["f%s" % i] = gui.TextField(
+    bold = False,
+    font=log_font,
+    font_size=14,
+    pos=(10, 50),
+    text="elem%s" % i
+  )
 connection_list = gui.ListField(
   bold=False,
-  fields={
-    'f1': element1,
-    'f2': element2
-  },
+  fields=fields,
   font=log_font,
   font_size=14,
   pos=(10, 200)

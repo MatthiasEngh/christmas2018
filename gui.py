@@ -73,7 +73,7 @@ class ListField:
       count += 1
 
   def element_pos(self, num):
-    return (20, num * 50)
+    return (20, num * 20)
 
   def update(self, **kwargs):
     pass
