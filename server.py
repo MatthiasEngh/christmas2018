@@ -3,7 +3,6 @@ import select
 import socket
 import time
 
-import pdb
 
 
 RECEIVE_MESSAGE = '%s: Got "%s" from %s'
@@ -58,9 +57,7 @@ initial_state = program_state()
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
-    if "log" in messages and len(messages["log"]) > 0:
-      message_text = messages["log"][-1]
-      self.elements["message"].update(text = message_text)
+    pass
 
 painter = ServerPainter(screen_size)
 log_font = "Geogia"
@@ -90,23 +87,15 @@ element2 = gui.TextField(
 )
 connection_list = gui.ListField(
   bold=False,
-  fields=[
-    element1,
-    element2
-  ],
+  fields={
+    'f1': element1,
+    'f2': element2
+  },
   font=log_font,
   font_size=14,
   pos=(10, 200)
 )
 
-message_element = gui.TextField(
-  bold=False,
-  font=log_font,
-  pos=(10,50),
-  font_size=14,
-  text=""
-)
-painter.add_element("message", message_element)
 painter.add_element("log", connection_list)
 
 gui.gui(initial_state, business_function(), painter)
