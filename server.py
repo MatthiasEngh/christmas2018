@@ -1,3 +1,4 @@
+import json
 import gui
 import select
 import socket
@@ -24,7 +25,7 @@ def business_procedure(**kwargs):
     client_pool.add(client_address)
     message = RECEIVE_MESSAGE % (received_data['time'], received_data['message'], client_address)
     shared_state.add(message)
-    client_pool.send(str(shared_state.messages))
+    client_pool.send(json.dumps(shared_state.client_data()))
   return gui_messages
 
 def business_function():
@@ -49,6 +50,10 @@ class ServerSharedState:
     if len(self.messages) >= MESSAGES_LENGTH:
       del(self.messages[0])
     self.messages.append(message)
+  def client_data(self):
+    return {
+      'game_state': []
+    }
 
 def program_state():
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
