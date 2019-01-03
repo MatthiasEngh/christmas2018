@@ -15,17 +15,31 @@ def business_procedure(**kwargs):
   program_state = kwargs['program_state']
   shared_state = program_state['shared_state']
   server_socket = program_state['server_socket']
+  client_pool = program_state['client_pool']
   gui_messages = {
   }
   received_data = receive_data(server_socket)
   if 'message' in received_data:
-    message = RECEIVE_MESSAGE % (received_data['time'], received_data['message'], received_data['from'])
+    client_address = received_data['from']
+    client_pool.add(client_address)
+    message = RECEIVE_MESSAGE % (received_data['time'], received_data['message'], client_address)
     shared_state.add(message)
-    print shared_state.messages
+    client_pool.send(str(shared_state.messages))
   return gui_messages
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
+
+class ClientPool:
+  def __init__(self, socket):
+    self.clients = []
+    self.socket = socket
+  def add(self, client_address):
+    if client_address not in self.clients:
+      self.clients.append(client_address)
+  def send(self, message):
+    for client in self.clients:
+      self.socket.sendto(message, client)
 
 MESSAGES_LENGTH = 10
 class ServerSharedState:
@@ -45,9 +59,10 @@ def program_state():
   print 'port: ', port
   server_socket.bind((host, port))
   return {
-    'sockets': [server_socket],
+    'client_pool': ClientPool(server_socket),
     'server_socket': server_socket,
-    'shared_state': ServerSharedState()
+    'shared_state': ServerSharedState(),
+    'sockets': [server_socket],
   }
 
 def receive_data(server_socket):

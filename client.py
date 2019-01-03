@@ -9,6 +9,7 @@ def business_procedure(**kwargs):
   client_socket = program_state['client_socket']
   host_address = program_state['host_address']
   client_socket.sendto("asdf", host_address)
+  print client_socket.recvfrom(1024)
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
