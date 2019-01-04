@@ -19,6 +19,14 @@ def gui(program_state, business, painter):
   window = Window(program_state, business, painter)
   window.open()
 
+class Entity:
+  def __init__(self, **kwargs):
+    self.pos = kwargs['pos']
+  def configure(self):
+    self.draw()
+  def draw(self):
+    self.surf = pygame.Surface((0,0))
+
 class TextField:
   def __init__(self, **kwargs):
     self.bold = kwargs['bold']

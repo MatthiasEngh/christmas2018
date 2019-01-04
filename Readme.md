@@ -1,7 +1,6 @@
 ### CURRENT
 
-receive and display on client
-connect multiple clients and show on server
+move self player with keyboard
 
 ### TODO
 

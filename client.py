@@ -4,6 +4,8 @@ import sys
 import time
 import json
 import pdb
+import pygame
+import collections
 
 
 def communicate(client_socket, host_address, send_data):
@@ -33,6 +35,11 @@ def business_procedure(**kwargs):
   server_data = communicate(client_socket, host_address, client_data)
   if server_data:
     game_state.update_other(extract_player_pos(server_data))
+  if any(game_state.other_players):
+    gui_messages["other_player"] = {
+      "pos": game_state.other_player_pos(),
+      "visible": True
+    }
   return gui_messages
 
 def business_function():
@@ -40,12 +47,14 @@ def business_function():
 
 class GameState:
   def __init__(self):
-    self.pos = (0,0)
-    self.other_players = []
-  def update_other(self, player_pos):
-    self.other_players = player_pos
+    self.pos = (150,150)
+    self.other_players = collections.OrderedDict()
+  def update_other(self, player_positions):
+    self.other_players = collections.OrderedDict(player_positions)
   def get_personal(self):
     return self.pos
+  def other_player_pos(self):
+    return self.other_players.popitem()[1]
 
 def program_state():
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -63,7 +72,24 @@ screen_size = (600, 500)
 
 class ClientPainter(gui.Painter):
   def update(self, messages):
+    if "other_player" in messages:
+      other_player = self.elements["other_player"]
+      other_player.pos = messages["other_player"]["pos"]
+      other_player.visible = messages["other_player"]["visible"]
+      other_player.draw()
+
+class Player(gui.Entity):
+  def __init__(self, visible = True):
+    self.pos = (100, 100)
+    self.visible = visible
+  def update(self, **kwargs):
     pass
+  def draw(self):
+    if self.visible:
+      self.surf = pygame.Surface((5, 5))
+    else:
+      self.surf = pygame.Surface((0, 0))
+    self.surf.fill((50, 50, 150))
 
 painter = ClientPainter(screen_size)
 
@@ -71,10 +97,14 @@ client_font = 'Georgia'
 client_title = gui.TextField(
   bold=True,
   font=client_font,
-  pos=(10,10),
+  pos=(10, 10),
   font_size=20,
   text="Client"
 )
+player = Player()
+other_player = Player(False)
 painter.add_element("title", client_title)
+painter.add_element("player", player)
+painter.add_element("other_player", other_player)
 
 gui.gui(program_state(), business_function(), painter)
