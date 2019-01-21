@@ -59,7 +59,7 @@ class ListField:
 
   def configure(self):
     self.font = pygame.font.SysFont(self.font, self.font_size, self.bold)
-    for field_name, text_field in self.text_fields.iteritems():
+    for field_name, text_field in self.text_fields.items():
       text_field.configure()
     self.draw()
 
@@ -76,7 +76,7 @@ class ListField:
     self.surf = pygame.Surface(self.getsize())
     self.surf.fill((255,255,255))
     count = 0
-    for _field_name, text_field in self.text_fields.iteritems():
+    for _field_name, text_field in self.text_fields.items():
       self.surf.blit(text_field.surf, self.element_pos(count))
       count += 1
 
@@ -98,12 +98,12 @@ class Painter:
 
   def configure(self):
     self.screen = pygame.display.set_mode(self.screen_size)
-    for element_name, element in self.elements.iteritems():
+    for element_name, element in self.elements.items():
       element.configure()
 
   def paint(self):
     self.screen.fill(BACKGROUND_COLOR)
-    for element_name, element in self.elements.iteritems():
+    for element_name, element in self.elements.items():
       self.screen.blit(element.surf, element.pos)
 
   def update(self, messages):

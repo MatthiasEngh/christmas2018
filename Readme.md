@@ -1,6 +1,8 @@
 ### CURRENT
 
-move self player with keyboard
+client make main menu
+ - quit
+ - lobby
 
 ### TODO
 

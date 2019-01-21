@@ -46,7 +46,7 @@ class ClientPool:
     self.clients = {}
     self.socket = socket
   def add(self, client_address):
-    print "adding client with", client_address
+    print("adding client with", client_address)
     new_client = Client(client_address)
     self.clients[client_address] = new_client
     return new_client.id()
@@ -54,13 +54,13 @@ class ClientPool:
     return client_address not in self.clients
   def send(self, client_data):
     game_state = json.dumps(client_data)
-    for client_address, client in self.clients.iteritems():
+    for client_address, client in self.clients.items():
       message_data = {
         'game_state': game_state,
         'player_id': client.id()
       }
       message = json.dumps(message_data)
-      self.socket.sendto(message, client_address)
+      self.socket.sendto(message.encode(), client_address)
 
 MESSAGES_LENGTH = 10
 class GameState:
@@ -76,8 +76,8 @@ def program_state():
   server_socket.setblocking(0)
   host = socket.gethostname()
   port = 12345
-  print 'hostname: ', host
-  print 'port: ', port
+  print('hostname: ', host)
+  print('port: ', port)
   server_socket.bind((host, port))
   return {
     'client_pool': ClientPool(server_socket),

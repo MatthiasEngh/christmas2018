@@ -1,4 +1,4 @@
-import gui
+from shared import gui
 import socket
 import sys
 import time
@@ -13,10 +13,8 @@ def communicate(client_socket, host_address, send_data):
     server_message, _server_address = client_socket.recvfrom(1024)
     server_data = json.loads(server_message)
   except socket.error as e:
-    if e[0] != 35:
-      raise e
     server_data = {}
-  client_socket.sendto(send_data, host_address)
+  client_socket.sendto(send_data.encode(), host_address)
   return server_data
 
 def extract_player_pos(server_data):
