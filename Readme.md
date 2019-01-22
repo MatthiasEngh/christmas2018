@@ -1,9 +1,8 @@
 ### CURRENT
 
-client make main menu
- - quit
- - lobby
+
 
 ### TODO
 
+- need to wait longer between registration requests
 
