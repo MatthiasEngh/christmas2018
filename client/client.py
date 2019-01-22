@@ -8,14 +8,21 @@ import pygame
 import collections
 
 
-def communicate(client_socket, host_address, send_data):
+def send(client_socket, host_address, send_data):
+  message_data = json.dumps(send_data)
+  client_socket.sendto(message_data.encode(), host_address)
+
+def listen(client_socket):
   try:
     server_message, _server_address = client_socket.recvfrom(1024)
-    server_data = json.loads(server_message)
+    server_data = json.loads(server_message.decode())
   except socket.error as e:
     server_data = {}
-  client_socket.sendto(send_data.encode(), host_address)
   return server_data
+
+def check_registration(server_data):
+  if 'registration' in server_data:
+    return server_data['registration']
 
 def extract_player_pos(server_data):
   player_data = json.loads(server_data['game_state'])
@@ -23,21 +30,29 @@ def extract_player_pos(server_data):
   player_data.pop(player_id)
   return player_data
 
+def registration_request(client_socket, host_address):
+  registration_data = { 'request': 'register' }
+  send(client_socket, host_address, registration_data)
+
 def business_procedure(**kwargs):
   program_state = kwargs['program_state']
   client_socket = program_state['client_socket']
   host_address = program_state['host_address']
   game_state = program_state['game_state']
   gui_messages = {}
-  client_data = json.dumps({ 'player_pos': game_state.get_personal() })
-  server_data = communicate(client_socket, host_address, client_data)
-  if server_data:
-    game_state.update_other(extract_player_pos(server_data))
-  if any(game_state.other_players):
-    gui_messages["other_player"] = {
-      "pos": game_state.other_player_pos(),
-      "visible": True
-    }
+
+  if program_state['registration']:
+    client_data = json.dumps({ 'player_pos': game_state.get_personal() })
+    server_data = listen(client_socket)
+  else:
+    server_data = listen(client_socket)
+    registration = check_registration(server_data)
+    if registration:
+      program_state['registration'] = registration
+      print("registered!", registration)
+    else:
+      registration_request(client_socket, host_address)
+
   return gui_messages
 
 def business_function():
@@ -62,7 +77,8 @@ def program_state():
   return {
     'client_socket': client_socket,
     'host_address': (address, port),
-    'game_state': GameState()
+    'game_state': GameState(),
+    'registration': None
   }
 
 

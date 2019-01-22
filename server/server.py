@@ -4,6 +4,7 @@ import re
 import select
 import socket
 import time
+import uuid
 
 
 
@@ -28,13 +29,13 @@ class Game:
     return str(uuid.uuid4())
   def interpret(self, network_data):
     data = self.parse_message(network_data['message'])
-    print data
   def parse_message(self, message):
     return json.loads(message)
   def register_player(self, address):
-    uuid = self.generate_uuid()
-    self.players[uuid] = { 'address': address }
-    print("registered player")
+    player_uuid = self.generate_uuid()
+    self.players[player_uuid] = { 'address': address }
+    print("registered player", player_uuid)
+    return player_uuid
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
@@ -53,20 +54,20 @@ def business_procedure(**kwargs):
   game = program_state['game']
   gui_messages = {}
 
-  received_data = receive_data(server_socket)
+  message, address, timestamp = receive_data(server_socket)
 
-  if not received_data:
+  if not message:
     return gui_messages
 
-  data = json.loads(received_data['message'])
+  data = json.loads(message)
   
   if not 'request' in data:
     return gui_messages
 
   if data['request'] == 'register':
-    registration_id = game.register_player()
+    registration_id = game.register_player(address)
     message = json.dumps({ 'registration': registration_id })
-    self.socket.sendto(message.encode(), data['from'])
+    server_socket.sendto(message.encode(), address)
 
   if data['request'] == 'message':
     pass
@@ -90,13 +91,9 @@ def receive_data(server_socket):
   try:
     message, address = server_socket.recvfrom(1024)
     timestamp = time.ctime()
-    network_data = {
-      'from': address,
-      'message': message,
-      'time': timestamp
-    }
+    network_data = (message, address, timestamp)
   except socket.error:
-    network_data = {}
+    network_data = (None, None, None)
   return network_data
 
 
