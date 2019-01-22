@@ -1,75 +1,77 @@
 import json
-import gui
+from shared import gui
+import re
 import select
 import socket
 import time
 
 
 
-RECEIVE_MESSAGE = '%s: Got "%s" from %s'
+# CONSTANTS
+
+
 CLIENT_MESSAGE = 'Thank you for connecting'
+MESSAGES_LENGTH = 10
+RECEIVE_MESSAGE = '%s: Got "%s" from %s'
 SOCKET_TIMEOUT = 0.2
 TERMINAL_PRINT = True
 
 
-def extract_player_pos(message):
-  player_pos = json.loads(message)['player_pos']
-  return player_pos
 
-def business_procedure(**kwargs):
-  program_state = kwargs['program_state']
-  game_state = program_state['game_state']
-  server_socket = program_state['server_socket']
-  client_pool = program_state['client_pool']
-  gui_messages = {
-  }
-  received_data = receive_data(server_socket)
-  if 'message' in received_data:
-    client_address = received_data['from']
-    if client_pool.is_new(client_address):
-      client_id = client_pool.add(client_address)
-      game_state.add_player(client_id, extract_player_pos(received_data['message']))
-  client_pool.send(game_state.client_data())
-  return gui_messages
+# CLASSES
+
+
+class Game:
+  def __init__(self):
+    self.players = {}
+  def generate_uuid(self):
+    return str(uuid.uuid4())
+  def interpret(self, network_data):
+    data = self.parse_message(network_data['message'])
+    print data
+  def parse_message(self, message):
+    return json.loads(message)
+  def register_player(self, address):
+    uuid = self.generate_uuid()
+    self.players[uuid] = { 'address': address }
+    print("registered player")
+
+class ServerPainter(gui.Painter):
+  def update(self, messages):
+    pass
+
+
+
+# FUNCTION DEFINITIONS
 
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
 
-class Client:
-  def __init__(self, address):
-    self.address = address
-  def id(self):
-    return str(self.address)
+def business_procedure(**kwargs):
+  program_state = kwargs['program_state']
+  server_socket = program_state['server_socket']
+  game = program_state['game']
+  gui_messages = {}
 
-class ClientPool:
-  def __init__(self, socket):
-    self.clients = {}
-    self.socket = socket
-  def add(self, client_address):
-    print("adding client with", client_address)
-    new_client = Client(client_address)
-    self.clients[client_address] = new_client
-    return new_client.id()
-  def is_new(self, client_address):
-    return client_address not in self.clients
-  def send(self, client_data):
-    game_state = json.dumps(client_data)
-    for client_address, client in self.clients.items():
-      message_data = {
-        'game_state': game_state,
-        'player_id': client.id()
-      }
-      message = json.dumps(message_data)
-      self.socket.sendto(message.encode(), client_address)
+  received_data = receive_data(server_socket)
 
-MESSAGES_LENGTH = 10
-class GameState:
-  def __init__(self):
-    self.players = {}
-  def add_player(self, player_id, player_pos):
-    self.players[player_id] = player_pos
-  def client_data(self):
-    return self.players
+  if not received_data:
+    return gui_messages
+
+  data = json.loads(received_data['message'])
+  
+  if not 'request' in data:
+    return gui_messages
+
+  if data['request'] == 'register':
+    registration_id = game.register_player()
+    message = json.dumps({ 'registration': registration_id })
+    self.socket.sendto(message.encode(), data['from'])
+
+  if data['request'] == 'message':
+    pass
+
+  return gui_messages
 
 def program_state():
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -80,10 +82,8 @@ def program_state():
   print('port: ', port)
   server_socket.bind((host, port))
   return {
-    'client_pool': ClientPool(server_socket),
+    'game': Game(),
     'server_socket': server_socket,
-    'game_state': GameState(),
-    'sockets': [server_socket],
   }
 
 def receive_data(server_socket):
@@ -100,12 +100,12 @@ def receive_data(server_socket):
   return network_data
 
 
+
+# STATEMENTS
+
+
 screen_size = (500, 600)
 initial_state = program_state()
-
-class ServerPainter(gui.Painter):
-  def update(self, messages):
-    pass
 
 painter = ServerPainter(screen_size)
 log_font = "Geogia"
