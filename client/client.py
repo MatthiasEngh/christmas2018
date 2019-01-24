@@ -44,6 +44,8 @@ def business_procedure(**kwargs):
   if program_state['registration']:
     client_data = json.dumps({ 'player_pos': game_state.get_personal() })
     server_data = listen(client_socket)
+    if server_data:
+      print(server_data)
   else:
     server_data = listen(client_socket)
     registration = check_registration(server_data)

@@ -41,6 +41,11 @@ class Game:
     data = self.parse_message(network_data['message'])
   def parse_message(self, message):
     return json.loads(message)
+  def player_messages(self):
+    for uuid, player_data in self.players.items():
+      yield ["hello!", player_data['address']]
+  def register_message(self, message):
+    pass
   def register_player(self, address, timestamp):
     player_uuid = self.generate_uuid()
     self.players[player_uuid] = { 'address': address }
@@ -49,6 +54,8 @@ class Game:
     return player_uuid
   def register_response(self, player_uuid, timestamp):
     self.response_registrations[player_uuid] = timestamp
+  def update(self):
+    pass
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
@@ -69,23 +76,16 @@ def business_procedure(**kwargs):
 
   expiration_time = time.time() - EXPIRATION_INTERVAL
   game.drop_inactive(expiration_time)
+
   message, address, timestamp = receive_data(server_socket)
+  if message:
+    handle_socket_data(game, message, address, timestamp, server_socket)
 
-  if not message:
-    return gui_messages
-
-  data = json.loads(message)
-  
-  if not 'request' in data:
-    return gui_messages
-
-  if data['request'] == 'register':
-    registration_id = game.register_player(address, timestamp)
-    message = json.dumps({ 'registration': registration_id })
-    server_socket.sendto(message.encode(), address)
-
-  if data['request'] == 'message':
-    pass
+  game.update()
+  for game_message, player_address in game.player_messages():
+    print "sending", game_message, "to", player_address
+    send_message = json.dumps({ 'game_state': game_message })
+    server_socket.sendto(send_message.encode(), player_address)
 
   return gui_messages
 
@@ -111,6 +111,20 @@ def receive_data(server_socket):
     network_data = (None, None, None)
   return network_data
 
+def handle_socket_data(game, message, address, timestamp, server_socket):
+  
+  data = json.loads(message)
+  
+  if not 'request' in data:
+    return
+
+  if data['request'] == 'register':
+    registration_id = game.register_player(address, timestamp)
+    registration_message = json.dumps({ 'registration': registration_id })
+    server_socket.sendto(registration_message.encode(), address)
+
+  if data['request'] == 'message':
+    game.register_message(data['message'])
 
 
 # STATEMENTS
