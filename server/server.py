@@ -12,6 +12,7 @@ import uuid
 
 
 CLIENT_MESSAGE = 'Thank you for connecting'
+EXPIRATION_INTERVAL = 60
 MESSAGES_LENGTH = 10
 RECEIVE_MESSAGE = '%s: Got "%s" from %s'
 SOCKET_TIMEOUT = 0.2
@@ -25,17 +26,29 @@ TERMINAL_PRINT = True
 class Game:
   def __init__(self):
     self.players = {}
+    self.response_registrations = {}
   def generate_uuid(self):
     return str(uuid.uuid4())
+  def drop_inactive(self, threshold_timestamp):
+    for uuid, timestamp in self.response_registrations.items():
+      if timestamp < threshold_timestamp:
+        del self.response_registrations[uuid]
+        self.drop_player(uuid)
+        print("dropped player", uuid, "after inactivity")
+  def drop_player(self, uuid):
+    del self.players[uuid]
   def interpret(self, network_data):
     data = self.parse_message(network_data['message'])
   def parse_message(self, message):
     return json.loads(message)
-  def register_player(self, address):
+  def register_player(self, address, timestamp):
     player_uuid = self.generate_uuid()
     self.players[player_uuid] = { 'address': address }
+    self.register_response(player_uuid, timestamp)
     print("registered player", player_uuid)
     return player_uuid
+  def register_response(self, player_uuid, timestamp):
+    self.response_registrations[player_uuid] = timestamp
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
@@ -54,6 +67,8 @@ def business_procedure(**kwargs):
   game = program_state['game']
   gui_messages = {}
 
+  expiration_time = time.time() - EXPIRATION_INTERVAL
+  game.drop_inactive(expiration_time)
   message, address, timestamp = receive_data(server_socket)
 
   if not message:
@@ -65,7 +80,7 @@ def business_procedure(**kwargs):
     return gui_messages
 
   if data['request'] == 'register':
-    registration_id = game.register_player(address)
+    registration_id = game.register_player(address, timestamp)
     message = json.dumps({ 'registration': registration_id })
     server_socket.sendto(message.encode(), address)
 
@@ -90,7 +105,7 @@ def program_state():
 def receive_data(server_socket):
   try:
     message, address = server_socket.recvfrom(1024)
-    timestamp = time.ctime()
+    timestamp = time.time()
     network_data = (message, address, timestamp)
   except socket.error:
     network_data = (None, None, None)
