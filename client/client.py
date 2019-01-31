@@ -63,6 +63,13 @@ def send(client_socket, host_address, send_data):
   client_socket.sendto(message_data.encode(), host_address)
   print("sent " + str(send_data) + "to server")
 
+def send_message(registration, client_socket, host_address, client_data):
+  send(client_socket, host_address, {
+    'request': 'message',
+    'registration': registration,
+    'message': client_data
+  })
+
 def listen(client_socket):
   try:
     server_message, _server_address = client_socket.recvfrom(1024)
@@ -88,12 +95,11 @@ def business_procedure(**kwargs):
 
   if program_state['registration']:
     if "up" in events:
-      send(client_socket, host_address, "up")
+      send_message(program_state['registration'], client_socket, host_address, "up")
     elif "down" in events:
-      send(client_socket, host_address, "down")
+      send_message(program_state['registration'], client_socket, host_address, "down")
     server_data = listen(client_socket)
     if server_data:
-      print(server_data)
       if 'game_state' in server_data:
         gui_messages['player'] = server_data['game_state']
   else:

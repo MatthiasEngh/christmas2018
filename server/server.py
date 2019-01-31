@@ -44,11 +44,18 @@ class Game:
   def player_messages(self):
     for uuid, player_data in self.players.items():
       yield [player_data['pos'], player_data['address']]
-  def register_message(self, message):
-    pass
+  def register_message(self, server_data):
+    if not 'registration' in server_data:
+      return
+    if not server_data['registration'] in self.players:
+      return
+    if server_data['message'] == 'up':
+      self.players[server_data['registration']]['dir'] = -1
+    elif server_data['message'] == 'down':
+      self.players[server_data['registration']]['dir'] = 1
   def register_player(self, address, timestamp):
     player_uuid = self.generate_uuid()
-    self.players[player_uuid] = { 'address': address, 'pos': { 'x': 50, 'y': 50 } }
+    self.players[player_uuid] = { 'address': address, 'pos': { 'x': 50, 'y': 50 }, 'dir': 1 }
     self.register_response(player_uuid, timestamp)
     print("registered player", player_uuid)
     return player_uuid
@@ -56,10 +63,12 @@ class Game:
     self.response_registrations[player_uuid] = timestamp
   def update(self):
     for uuid, player_data in self.players.items():
-      if self.players[uuid]['pos']['y'] >= 300:
+      if self.players[uuid]['pos']['y'] > 300:
         self.players[uuid]['pos']['y'] = 300
+      elif self.players[uuid]['pos']['y'] < 100:
+        self.players[uuid]['pos']['y'] = 100
       else:
-        self.players[uuid]['pos']['y'] += 0.5
+        self.players[uuid]['pos']['y'] += 0.5 * self.players[uuid]['dir']
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
@@ -87,7 +96,7 @@ def business_procedure(**kwargs):
 
   game.update()
   for game_message, player_address in game.player_messages():
-    print "sending", game_message, "to", player_address
+#    print "sending", game_message, "to", player_address
     send_message = json.dumps({ 'game_state': game_message })
     server_socket.sendto(send_message.encode(), player_address)
 
@@ -128,7 +137,7 @@ def handle_socket_data(game, message, address, timestamp, server_socket):
     server_socket.sendto(registration_message.encode(), address)
 
   if data['request'] == 'message':
-    game.register_message(data['message'])
+    game.register_message(data)
 
 
 # STATEMENTS
