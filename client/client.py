@@ -8,6 +8,54 @@ import pygame
 import collections
 
 
+# CONSTANTS
+
+
+CLIENT_FONT = 'Georgia'
+
+SCREEN_SIZE = (600, 500)
+
+
+# CLASSES
+
+
+class GameState:
+  def __init__(self):
+    self.pos = (150,150)
+    self.other_players = collections.OrderedDict()
+  def update_other(self, player_positions):
+    self.other_players = collections.OrderedDict(player_positions)
+  def get_personal(self):
+    return self.pos
+  def other_player_pos(self):
+    return self.other_players.popitem()[1]
+
+class ClientPainter(gui.Painter):
+  def update(self, messages):
+    if "other_player" in messages:
+      other_player = self.elements["other_player"]
+      other_player.pos = messages["other_player"]["pos"]
+      other_player.visible = messages["other_player"]["visible"]
+      other_player.draw()
+
+class Player(gui.Entity):
+  def __init__(self, visible = True):
+    self.pos = (100, 100)
+    self.visible = visible
+  def update(self, **kwargs):
+    pass
+  def draw(self):
+    if self.visible:
+      self.surf = pygame.Surface((5, 5))
+    else:
+      self.surf = pygame.Surface((0, 0))
+    self.surf.fill((50, 50, 150))
+
+
+
+# FUNCTION DEFINITIONS
+
+
 def send(client_socket, host_address, send_data):
   message_data = json.dumps(send_data)
   client_socket.sendto(message_data.encode(), host_address)
@@ -60,17 +108,6 @@ def business_procedure(**kwargs):
 def business_function():
   return lambda **kwargs: business_procedure(**kwargs)
 
-class GameState:
-  def __init__(self):
-    self.pos = (150,150)
-    self.other_players = collections.OrderedDict()
-  def update_other(self, player_positions):
-    self.other_players = collections.OrderedDict(player_positions)
-  def get_personal(self):
-    return self.pos
-  def other_player_pos(self):
-    return self.other_players.popitem()[1]
-
 def program_state():
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
   client_socket.setblocking(0)
@@ -84,35 +121,15 @@ def program_state():
   }
 
 
-screen_size = (600, 500)
 
-class ClientPainter(gui.Painter):
-  def update(self, messages):
-    if "other_player" in messages:
-      other_player = self.elements["other_player"]
-      other_player.pos = messages["other_player"]["pos"]
-      other_player.visible = messages["other_player"]["visible"]
-      other_player.draw()
+# STATEMENTS
 
-class Player(gui.Entity):
-  def __init__(self, visible = True):
-    self.pos = (100, 100)
-    self.visible = visible
-  def update(self, **kwargs):
-    pass
-  def draw(self):
-    if self.visible:
-      self.surf = pygame.Surface((5, 5))
-    else:
-      self.surf = pygame.Surface((0, 0))
-    self.surf.fill((50, 50, 150))
 
-painter = ClientPainter(screen_size)
+painter = ClientPainter(SCREEN_SIZE)
 
-client_font = 'Georgia'
 client_title = gui.TextField(
   bold=True,
-  font=client_font,
+  font=CLIENT_FONT,
   pos=(10, 10),
   font_size=20,
   text="Client"
