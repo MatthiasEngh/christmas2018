@@ -119,20 +119,26 @@ class Window:
   def main_loop(self):
     while True:
       events = pygame.event.get()
+      tr_events = []
 
       for event in events:
         if event.type == pygame.QUIT:
           pygame.quit()
           sys.exit()
+        if event.type == pygame.KEYDOWN:
+          if event.key == pygame.K_UP:
+            tr_events.append("up")
+          elif event.key == pygame.K_DOWN:
+            tr_events.append("down")
 
-      messages = self.run_business()
+      messages = self.run_business(tr_events)
       self.update(messages)
 
   def open(self):
     self.main_loop()
 
-  def run_business(self):
-    return self.business(program_state=self.program_state)
+  def run_business(self, events):
+    return self.business(events=events, program_state=self.program_state)
 
   def update(self, messages):
     self.painter.update(messages)
