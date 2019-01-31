@@ -43,19 +43,23 @@ class Game:
     return json.loads(message)
   def player_messages(self):
     for uuid, player_data in self.players.items():
-      yield ["hello!", player_data['address']]
+      yield [player_data['pos'], player_data['address']]
   def register_message(self, message):
     pass
   def register_player(self, address, timestamp):
     player_uuid = self.generate_uuid()
-    self.players[player_uuid] = { 'address': address }
+    self.players[player_uuid] = { 'address': address, 'pos': { 'x': 50, 'y': 50 } }
     self.register_response(player_uuid, timestamp)
     print("registered player", player_uuid)
     return player_uuid
   def register_response(self, player_uuid, timestamp):
     self.response_registrations[player_uuid] = timestamp
   def update(self):
-    pass
+    for uuid, player_data in self.players.items():
+      if self.players[uuid]['pos']['y'] >= 300:
+        self.players[uuid]['pos']['y'] = 300
+      else:
+        self.players[uuid]['pos']['y'] += 0.1
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
