@@ -59,7 +59,7 @@ class Game:
       if self.players[uuid]['pos']['y'] >= 300:
         self.players[uuid]['pos']['y'] = 300
       else:
-        self.players[uuid]['pos']['y'] += 0.1
+        self.players[uuid]['pos']['y'] += 0.5
 
 class ServerPainter(gui.Painter):
   def update(self, messages):
@@ -116,9 +116,9 @@ def receive_data(server_socket):
   return network_data
 
 def handle_socket_data(game, message, address, timestamp, server_socket):
-  
+
   data = json.loads(message)
-  
+
   if not 'request' in data:
     return
 

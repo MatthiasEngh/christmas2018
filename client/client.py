@@ -21,29 +21,31 @@ SCREEN_SIZE = (600, 500)
 
 class GameState:
   def __init__(self):
-    self.pos = (150,150)
+    self.pos = {}
     self.other_players = collections.OrderedDict()
-  def update_other(self, player_positions):
-    self.other_players = collections.OrderedDict(player_positions)
   def get_personal(self):
     return self.pos
   def other_player_pos(self):
     return self.other_players.popitem()[1]
+  def register_data(self, server_data):
+    self.pos = server_data['game_state']
+  def update_other(self, player_positions):
+    self.other_players = collections.OrderedDict(player_positions)
+
 
 class ClientPainter(gui.Painter):
   def update(self, messages):
-    if "other_player" in messages:
-      other_player = self.elements["other_player"]
-      other_player.pos = messages["other_player"]["pos"]
-      other_player.visible = messages["other_player"]["visible"]
-      other_player.draw()
+    if "player" in messages:
+      player = self.elements["player"]
+      player.update(messages["player"])
+      player.draw()
 
 class Player(gui.Entity):
   def __init__(self, visible = True):
     self.pos = (100, 100)
     self.visible = visible
-  def update(self, **kwargs):
-    pass
+  def update(self, coords):
+    self.pos = (coords['x'], coords['y'])
   def draw(self):
     if self.visible:
       self.surf = pygame.Surface((5, 5))
@@ -86,14 +88,12 @@ def business_procedure(**kwargs):
   program_state = kwargs['program_state']
   client_socket = program_state['client_socket']
   host_address = program_state['host_address']
-  game_state = program_state['game_state']
   gui_messages = {}
 
   if program_state['registration']:
-    client_data = json.dumps({ 'player_pos': game_state.get_personal() })
     server_data = listen(client_socket)
     if server_data:
-      print(server_data)
+      gui_messages['player'] = server_data['game_state']
   else:
     server_data = listen(client_socket)
     registration = check_registration(server_data)
