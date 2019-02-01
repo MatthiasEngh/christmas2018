@@ -27,8 +27,6 @@ class Game:
   def __init__(self):
     self.players = {}
     self.response_registrations = {}
-  def generate_uuid(self):
-    return str(uuid.uuid4())
   def drop_inactive(self, threshold_timestamp):
     for uuid, timestamp in self.response_registrations.items():
       if timestamp < threshold_timestamp:
@@ -56,7 +54,7 @@ class Game:
     elif server_data['message'] == 'down':
       self.players[player_uuid]['dir'] = 1
   def register_player(self, address, timestamp):
-    player_uuid = self.generate_uuid()
+    player_uuid = generate_uuid()
     self.players[player_uuid] = { 'address': address, 'pos': { 'x': 50, 'y': 50 }, 'dir': 1 }
     self.register_response(player_uuid, timestamp)
     print("registered player", player_uuid)
@@ -103,6 +101,9 @@ def business_procedure(**kwargs):
     server_socket.sendto(send_message.encode(), player_address)
 
   return gui_messages
+
+def generate_uuid():
+  return str(uuid.uuid4())
 
 def program_state():
   server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
