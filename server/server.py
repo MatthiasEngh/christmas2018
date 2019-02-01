@@ -44,15 +44,17 @@ class Game:
   def player_messages(self):
     for uuid, player_data in self.players.items():
       yield [player_data['pos'], player_data['address']]
-  def register_message(self, server_data):
+  def register_message(self, server_data, timestamp):
     if not 'registration' in server_data:
       return
     if not server_data['registration'] in self.players:
       return
+    player_uuid = server_data['registration']
+    self.register_response(player_uuid, timestamp)
     if server_data['message'] == 'up':
-      self.players[server_data['registration']]['dir'] = -1
+      self.players[player_uuid]['dir'] = -1
     elif server_data['message'] == 'down':
-      self.players[server_data['registration']]['dir'] = 1
+      self.players[player_uuid]['dir'] = 1
   def register_player(self, address, timestamp):
     player_uuid = self.generate_uuid()
     self.players[player_uuid] = { 'address': address, 'pos': { 'x': 50, 'y': 50 }, 'dir': 1 }
@@ -137,7 +139,7 @@ def handle_socket_data(game, message, address, timestamp, server_socket):
     server_socket.sendto(registration_message.encode(), address)
 
   if data['request'] == 'message':
-    game.register_message(data)
+    game.register_message(data, timestamp)
 
 
 # STATEMENTS
